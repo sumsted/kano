@@ -48,4 +48,5 @@ class Kano:
 
 if __name__=='__main__':
     k = Kano(debug=True)
-    k.command_on_threshold(40, 'espeak -v english-us "wat!"')
+    # k.command_on_threshold(40, 'espeak -v english-us "wat!"')
+    k.command_on_threshold(100, "su scott - -c firefox")
