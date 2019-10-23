@@ -5,38 +5,49 @@ import json
 
 class Kano:
 
-    def __init__(self):
+    def __init__(self, debug=False):
+        self.debug = debug
         self.address = self.find_device_address()
         self.device = serial.Serial(self.address)
+
+    def pid(self, s):
+        if self.debug:
+            print(s)
 
     def close(self):
         self.device.close()
 
     def find_device_address(self):
-        results = os.popen('dmesg |grep -i "ttyACM"| grep -i "USB ACM device"').read().split('\n')
-        for line in reversed(results[0:-1]):
-            print('line: %s' % line)
-            device = '/dev/'+line.split(' ')[-4][0:-1]
-            break
-        return device
+        try:
+            results = os.popen('dmesg |grep -i "ttyACM"| grep -i "USB ACM device"').read().split('\n')
+            address =  '/dev/'+results[-2].split(' ')[-4][0:-1]
+            self.pid("%s, %s"%(results[-2], address))
+        except Exception:
+            raise Exception('Kano device not found')
+        return address
 
     def filter(self, unfiltered_distance):
         pass
 
-    def read_distance(self):
-        distance = 0
+    def read_proximity(self):
         try:
             buffer = self.device.readline()
             data = json.loads(buffer)
-            proximity = data['detail']['proximity']
-            factor = 5
-            distance = (255-proximity)**factor * 40 / (255**factor) + 5
+            proximity = 255-data['detail']['proximity']
+            self.pid("proximity: %d"%proximity)
         except Exception as e:
             print(e)
-        return distance
+        return proximity
+
+    def command_on_threshold(self, threshold, command):
+        while self.read_proximity() > threshold:
+            pass
+        os.system(command)
 
 
 if __name__=='__main__':
-    k = Kano()
-    while True:
-        print(k.read_distance())
+    k = Kano(debug=True)
+    # while True:
+    # for i in range(10):
+    #     print(k.read_proximity())
+    k.command_on_threshold(40, 'espeak -v english-us "all your base are belong to us"')
