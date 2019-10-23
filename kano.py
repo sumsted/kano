@@ -1,4 +1,5 @@
 import os
+import time
 import serial
 import json
 
@@ -36,6 +37,7 @@ class Kano:
             proximity = 255-data['detail']['proximity']
             self.pid("proximity: %d"%proximity)
         except Exception as e:
+            print(buffer)
             print(e)
         return proximity
 
@@ -44,10 +46,6 @@ class Kano:
             pass
         os.system(command)
 
-
 if __name__=='__main__':
     k = Kano(debug=True)
-    # while True:
-    # for i in range(10):
-    #     print(k.read_proximity())
-    k.command_on_threshold(40, 'espeak -v english-us "all your base are belong to us"')
+    k.command_on_threshold(40, 'espeak -v english-us "wat!"')
