@@ -41,12 +41,43 @@ class Kano:
             print(e)
         return proximity
 
-    def command_on_threshold(self, threshold, command):
-        while self.read_proximity() > threshold:
-            pass
-        os.system(command)
+    def do_commands(self, commands):
+        max_space = 1
+        threshold = 250
+        code = 0
+        last_seconds = 0
+        new_code = True
+        while True:
+            proximity = self.read_proximity()
+            current_seconds = time.time()
+            if current_seconds - last_seconds > 1:
+                if not new_code:
+                    print(code)
+                    # code is number of waves over kano
+                    # execute command that matches code
+                    try:
+                        os.system(commands[code-1])
+                    except Exception:
+                        print("Command not found.")
+                new_code = True
+            else:
+                new_code = False
+            if proximity < threshold:
+                while True:
+                    proximity = self.read_proximity()
+                    if proximity >= threshold:
+                        code = 1 if new_code else code+1
+                        last_seconds = time.time()
+                        break
+
 
 if __name__=='__main__':
-    k = Kano(debug=True)
-    # k.command_on_threshold(40, 'espeak -v english-us "wat!"')
-    k.command_on_threshold(100, "su scott - -c firefox")
+    k = Kano(debug=False)
+    # while True:
+    #     k.read_proximity()
+    k.do_commands([
+        'espeak -v english-us "piston honda"',
+        "su scott - -c firefox",
+        "su scott - -c gnome-terminal",
+        "su scott - -c code"
+    ])
