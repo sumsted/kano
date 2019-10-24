@@ -3,6 +3,9 @@ import time
 import serial
 import json
 
+if os.name == "nt":
+    import win32com.client
+
 
 class Kano:
 
@@ -20,10 +23,24 @@ class Kano:
 
     def find_device_address(self):
         try:
-            results = os.popen('dmesg |grep -i "ttyACM"| grep -i "USB ACM device"').read().split('\n')
-            address =  '/dev/'+results[-2].split(' ')[-4][0:-1]
-            self.pid("%s, %s"%(results[-2], address))
-        except Exception:
+            if os.name == 'nt':
+                comp = "."
+                wmi_service = win32com.client.Dispatch("WbemScripting.SWbemLocator")
+                swbem_services = wmi_service.ConnectServer(comp,"root\cimv2")
+                all_devices = swbem_services.ExecQuery("SELECT * FROM Win32_PnPEntity")
+                for device in all_devices:
+                    try:
+                        if "COM" in device.Name:
+                            address = device.name[-5:-1]
+                    except TypeError as e:
+                        pass # some devices are nameless
+                self.pid("%s, %s"%(device.Name, address))
+            else:
+                results = os.popen('dmesg |grep -i "ttyACM"| grep -i "USB ACM device"').read().split('\n')
+                address =  '/dev/'+results[-2].split(' ')[-4][0:-1]
+                self.pid("%s, %s"%(results[-2], address))
+        except Exception as e:
+            print(e)
             raise Exception('Kano device not found')
         return address
 
@@ -31,6 +48,7 @@ class Kano:
         pass
 
     def read_proximity(self):
+        proximity = 0
         try:
             buffer = self.device.readline()
             data = json.loads(buffer)
@@ -72,12 +90,12 @@ class Kano:
 
 
 if __name__=='__main__':
-    k = Kano(debug=False)
-    # while True:
-    #     k.read_proximity()
-    k.do_commands([
-        'espeak -v english-us "piston honda"',
-        "su scott - -c firefox",
-        "su scott - -c gnome-terminal",
-        "su scott - -c code"
-    ])
+    k = Kano(debug=True)
+    while True:
+        k.read_proximity()
+    # k.do_commands([
+    #     'espeak -v english-us "piston honda"',
+    #     "su scott - -c firefox",
+    #     "su scott - -c gnome-terminal",
+    #     "su scott - -c code"
+    # ])
