@@ -1,4 +1,6 @@
 import os
+import sys
+import subprocess
 import time
 import serial
 import json
@@ -59,8 +61,18 @@ class Kano:
             print(e)
         return proximity
 
+    def exec_command(self, command):
+        if os.name == 'nt':
+            wrapper = "PowerShell -Command ""Start-Process -NoNewWindow '%s'"""
+            subprocess.call(wrapper%command)
+        else:
+            id = os.fork()
+            if id == 0:
+                subprocess.call(command)
+                sys.exit(0)
+
     def do_commands(self, commands):
-        max_space = 1
+        max_delay = .5
         threshold = 250
         code = 0
         last_seconds = 0
@@ -68,14 +80,13 @@ class Kano:
         while True:
             proximity = self.read_proximity()
             current_seconds = time.time()
-            if current_seconds - last_seconds > 1:
+            if current_seconds - last_seconds > max_delay:
                 if not new_code:
                     print(code)
-                    # code is number of waves over kano
-                    # execute command that matches code
                     try:
-                        os.system(commands[code-1])
-                    except Exception:
+                        self.exec_command(commands[code-1])
+                    except Exception as e:
+                        print(e)
                         print("Command not found.")
                 new_code = True
             else:
@@ -90,12 +101,18 @@ class Kano:
 
 
 if __name__=='__main__':
-    k = Kano(debug=True)
-    while True:
-        k.read_proximity()
+    k = Kano(debug=False)
+    # while True:
+    #     k.read_proximity()
     # k.do_commands([
     #     'espeak -v english-us "piston honda"',
     #     "su scott - -c firefox",
     #     "su scott - -c gnome-terminal",
     #     "su scott - -c code"
     # ])
+
+    k.do_commands([
+        "C:\\Program Files\\Git\\git-bash.exe",
+        "C:\\Program Files\\Mozilla Firefox\\firefox.exe"
+        # """PowerShell -Command ""Add-Type –AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('Hello Scott');"""
+    ])
