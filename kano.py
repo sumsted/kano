@@ -62,14 +62,18 @@ class Kano:
         return proximity
 
     def exec_command(self, command):
-        if os.name == 'nt':
-            wrapper = "PowerShell -Command ""Start-Process -NoNewWindow '%s'"""
-            subprocess.call(wrapper%command)
-        else:
-            id = os.fork()
-            if id == 0:
-                subprocess.call(command)
-                sys.exit(0)
+        try:
+            if os.name == 'nt':
+                wrapper = "PowerShell -Command ""Start-Process -NoNewWindow '%s'"""
+                subprocess.call(wrapper%command)
+            else:
+                id = os.fork()
+                if id == 0:
+                    subprocess.call(command)
+                    sys.exit(0)
+        except Exception as e:
+            print(e)
+            raise(Exception('Unable to execute command'))
 
     def do_commands(self, commands):
         max_delay = .5
@@ -113,6 +117,7 @@ if __name__=='__main__':
 
     k.do_commands([
         "C:\\Program Files\\Git\\git-bash.exe",
-        "C:\\Program Files\\Mozilla Firefox\\firefox.exe"
+        "C:\\Program Files\\Mozilla Firefox\\firefox.exe",
+        "echo 'hello'"
         # """PowerShell -Command ""Add-Type –AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('Hello Scott');"""
     ])
