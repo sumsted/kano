@@ -51,6 +51,7 @@ class Kano:
 
     def read_proximity(self):
         proximity = 0
+        buffer = ""
         try:
             buffer = self.device.readline()
             data = json.loads(buffer)
@@ -107,17 +108,16 @@ class Kano:
 if __name__=='__main__':
     k = Kano(debug=False)
     # while True:
-    #     k.read_proximity()
-    # k.do_commands([
-    #     'espeak -v english-us "piston honda"',
-    #     "su scott - -c firefox",
-    #     "su scott - -c gnome-terminal",
-    #     "su scott - -c code"
-    # ])
-
+        # k.read_proximity()
     k.do_commands([
-        "C:\\Program Files\\Git\\git-bash.exe",
-        "C:\\Program Files\\Mozilla Firefox\\firefox.exe",
-        "echo 'hello'"
-        # """PowerShell -Command ""Add-Type –AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('Hello Scott');"""
+        ['espeak','-v','english-us','"piston honda"'],
+        ['su','scott','-','-c','firefox'],
+        ['su','scott','-','-c','gnome-terminal'],
+        ['su','scott','-','-c','code']
     ])
+
+    # k.do_commands([
+    #     "C:\\Program Files\\Git\\git-bash.exe",
+    #     "C:\\Program Files\\Mozilla Firefox\\firefox.exe",
+    #     "echo 'hello'"
+    # ])
